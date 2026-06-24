@@ -1,0 +1,89 @@
+@import 'tailwindcss';
+
+/*
+  ─────────────────────────────────────────────────────────────────────────
+  NAVIGATE SURVEY PROTOTYPE — DESIGN TOKENS
+  ─────────────────────────────────────────────────────────────────────────
+  These CSS variables are the single source of truth for brand styling.
+  When the real Navigate brand assets arrive, change ONLY the values in
+  :root below — every component reads from these tokens, so no other file
+  needs editing to re-theme the whole prototype.
+*/
+
+:root {
+  /* Navigate "Student theme" palette (from design-tokens/colour-tokens.jpg) */
+  --brand: #459ba1; /* Primary */
+  --brand-hover: #3a838a; /* darker Primary for hover/press */
+  --brand-soft: #e7f2f3; /* light Primary tint for selected states */
+  --brand-ring: #93c8cc; /* focus ring */
+  --secondary: #703b77; /* Secondary (purple) */
+
+  /* Surfaces & text */
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --surface-muted: #f4f7f8;
+  --border: #dce4e7;
+  --text: #1f2d33;
+  --text-muted: #5c6b71;
+
+  /* Feedback (Navigate tokens) */
+  --danger: #cc0100; /* Red */
+  --success: #018002; /* Green */
+  --warning: #ffa501; /* Yellow */
+
+  /* Shape & type */
+  --radius: 14px;
+  --radius-lg: 22px;
+  /*
+    Brand font is Whitney (licensed), with Open Sans as the site's documented
+    fallback. We don't have the Whitney web-font files, and students' devices
+    won't have Whitney installed either — so the prototype renders in Open Sans
+    (the true fallback most users see). On the production site, prepend the
+    Whitney @font-face here: 'Whitney', 'Open Sans', …
+  */
+  --font-sans: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Map tokens into Tailwind's theme so utilities like bg-brand / text-muted work */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ring: var(--brand-ring);
+  --color-secondary: var(--secondary);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-edge: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-danger: var(--danger);
+  --radius-card: var(--radius);
+  --radius-sheet: var(--radius-lg);
+  --font-sans: var(--font-sans);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Respect reduced-motion preferences (a11y) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
