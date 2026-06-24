@@ -106,9 +106,15 @@ export function SurveyWizard({
           </h2>
         </legend>
 
-        <p className="mt-1 text-xs font-medium text-muted">
-          {q.required ? 'Required' : 'Optional'}
-        </p>
+        {error ? (
+          <p id={errId} role="alert" className="mt-1 text-sm font-medium text-danger">
+            {error}
+          </p>
+        ) : (
+          <p className="mt-1 text-xs font-medium text-muted">
+            {q.required ? 'Required' : 'Optional'}
+          </p>
+        )}
 
         {q.helpText && (
           <p id={helpId} className="mt-2 text-sm text-muted leading-relaxed">
@@ -128,12 +134,6 @@ export function SurveyWizard({
             describedBy={describedBy}
           />
         </div>
-
-        {error && (
-          <p id={errId} role="alert" className="mt-3 text-sm font-medium text-danger">
-            {error}
-          </p>
-        )}
       </fieldset>
     </ScreenLayout>
   );
