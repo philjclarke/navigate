@@ -16,14 +16,14 @@ import {
 export function Invitation({
   survey,
   onTakePart,
-  onRemind,
+  onDismiss,
   onDecline,
   contained = false,
 }: {
   survey: Survey;
   onTakePart: () => void;
-  onRemind: () => void;
-  onDecline: () => void;
+  onDismiss: () => void; // soft close (X / "Remind me next time") — panel stays
+  onDecline: () => void; // explicit "No thanks" — panel removed
   contained?: boolean;
 }) {
   return (
@@ -39,7 +39,7 @@ export function Invitation({
         <button
           type="button"
           aria-label="Close"
-          onClick={onDecline}
+          onClick={onDismiss}
           className="absolute right-4 top-4 z-10 text-muted hover:text-ink p-1 rounded focus:outline-none focus-visible:ring-3 focus-visible:ring-brand-ring"
         >
           <IconClose className="w-5 h-5" />
@@ -89,7 +89,7 @@ export function Invitation({
             </button>
             <button
               type="button"
-              onClick={onRemind}
+              onClick={onDismiss}
               className="inline-flex items-center justify-center gap-2 rounded-[5px] border border-brand bg-surface px-5 py-3 text-[15px] font-semibold text-brand transition hover:bg-brand-soft cursor-pointer focus:outline-none focus-visible:ring-3 focus-visible:ring-brand-ring"
             >
               <IconClock className="w-4 h-4" />
@@ -98,7 +98,7 @@ export function Invitation({
             <button
               type="button"
               onClick={onDecline}
-              className="inline-flex items-center justify-center rounded-[5px] border border-edge bg-surface px-5 py-3 text-[15px] font-semibold text-ink transition hover:border-brand-ring cursor-pointer focus:outline-none focus-visible:ring-3 focus-visible:ring-brand-ring"
+              className="inline-flex items-center justify-center rounded-[5px] border border-edge bg-surface px-5 py-3 text-[15px] font-semibold text-muted transition hover:border-brand-ring hover:text-ink cursor-pointer focus:outline-none focus-visible:ring-3 focus-visible:ring-brand-ring"
             >
               No thanks
             </button>

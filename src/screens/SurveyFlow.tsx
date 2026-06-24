@@ -6,9 +6,19 @@ import { SurveyWizard } from './SurveyWizard';
 import { PrizeDraw, type PrizeContact } from './PrizeDraw';
 import { ThankYou } from './ThankYou';
 
-export type CloseReason = 'completed' | 'declined' | 'remind';
+// 'started' = closed part-way through (can be resumed); only 'declined'
+// (the explicit "No thanks") should hide the homepage panel.
+export type CloseReason = 'completed' | 'declined' | 'remind' | 'started';
 
 type Stage = 'invitation' | 'survey' | 'prizedraw' | 'thankyou';
+
+// Snapshot of in-progress state so the survey can be resumed where left off.
+export interface SurveyProgress {
+  stage: Stage;
+  index: number;
+  answers: Record<string, AnswerValue>;
+  contact?: PrizeContact;
+}
 
 // Orchestrates the full student journey. The invitation is always the supplied
 // modal; the survey/prize-draw/thank-you render inside the chosen shell.
@@ -16,17 +26,19 @@ export function SurveyFlow({
   survey,
   mode,
   contained = false,
+  initial,
   onClose,
 }: {
   survey: Survey;
   mode: ShellMode;
   contained?: boolean;
-  onClose: (reason: CloseReason, data?: { answers: Record<string, AnswerValue>; contact?: PrizeContact }) => void;
+  initial?: SurveyProgress; // when resuming, start here instead of the invitation
+  onClose: (reason: CloseReason, progress?: SurveyProgress) => void;
 }) {
-  const [stage, setStage] = useState<Stage>('invitation');
-  const [index, setIndex] = useState(0); // lifted so Back from prize draw resumes
-  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
-  const [contact, setContact] = useState<PrizeContact | undefined>(undefined);
+  const [stage, setStage] = useState<Stage>(initial?.stage ?? 'invitation');
+  const [index, setIndex] = useState(initial?.index ?? 0);
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>(initial?.answers ?? {});
+  const [contact, setContact] = useState<PrizeContact | undefined>(initial?.contact);
 
   const total = survey.questions.length;
   const setAnswer = (id: string, value: AnswerValue) =>
@@ -43,6 +55,10 @@ export function SurveyFlow({
     else setIndex(index - 1);
   };
 
+  // Closing part-way through: keep progress so the homepage panel can offer
+  // "Resume survey". Does not count as declining.
+  const exitStarted = (current: Stage) => onClose('started', { stage: current, index, answers, contact });
+
   // The invitation is its own centered modal (matches the supplied design).
   if (stage === 'invitation') {
     return (
@@ -53,7 +69,9 @@ export function SurveyFlow({
           setIndex(0);
           setStage('survey');
         }}
-        onRemind={() => onClose('remind')}
+        // Dismissing the popup (X or "Remind me next time") keeps the panel;
+        // only "No thanks" declines.
+        onDismiss={() => onClose('remind')}
         onDecline={() => onClose('declined')}
       />
     );
@@ -69,7 +87,7 @@ export function SurveyFlow({
           onAnswer={setAnswer}
           onNext={handleNext}
           onBack={handleBack}
-          onExit={() => setStage('invitation')}
+          onExit={() => exitStarted('survey')}
         />
       )}
 
@@ -77,7 +95,7 @@ export function SurveyFlow({
         <PrizeDraw
           totalSteps={total}
           onBack={() => setStage('survey')}
-          onExit={() => setStage('invitation')}
+          onExit={() => exitStarted('prizedraw')}
           onContinue={(c) => {
             setContact(c);
             setStage('thankyou');
@@ -93,7 +111,7 @@ export function SurveyFlow({
         <ThankYou
           survey={survey}
           enteredPrizeDraw={!!(contact?.email || contact?.mobile)}
-          onFinish={() => onClose('completed', { answers, contact })}
+          onFinish={() => onClose('completed', { stage: 'thankyou', index, answers, contact })}
         />
       )}
     </Shell>

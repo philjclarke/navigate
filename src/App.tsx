@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { demoSurvey } from './survey/demoSurvey';
-import { SurveyFlow, type CloseReason } from './screens/SurveyFlow';
+import { SurveyFlow, type CloseReason, type SurveyProgress } from './screens/SurveyFlow';
 import { DesktopFrame } from './screens/DesktopFrame';
 import { Button } from './components/Button';
 import { IconMegaphone, IconClock, IconGift, IconCheckCircle } from './components/Icon';
@@ -10,20 +10,42 @@ export default function App() {
   const [open, setOpen] = useState(true);
   const [mode, setMode] = useState<ShellMode>('fullscreen');
   const [status, setStatus] = useState<CloseReason | null>(null);
+  const [progress, setProgress] = useState<SurveyProgress | null>(null);
+  const [resuming, setResuming] = useState(false);
   const isDesktop = useIsDesktop();
 
-  const handleClose = (reason: CloseReason) => {
+  const handleClose = (reason: CloseReason, p?: SurveyProgress) => {
     setOpen(false);
     setStatus(reason);
+    // Keep progress only when the student closed part-way through.
+    setProgress(reason === 'started' && p ? p : null);
   };
 
+  // Fresh run (from the invitation), e.g. "Take the survey".
   const launch = () => {
     setStatus(null);
+    setProgress(null);
+    setResuming(false);
     setOpen(true);
   };
 
+  // Resume an in-progress run where the student left off.
+  const resume = () => {
+    setResuming(true);
+    setOpen(true);
+  };
+
+  // Panel button resumes if there's saved progress, otherwise starts fresh.
+  const onLaunch = status === 'started' ? resume : launch;
+
   const survey = open && (
-    <SurveyFlow survey={demoSurvey} mode={mode} contained={isDesktop} onClose={handleClose} />
+    <SurveyFlow
+      survey={demoSurvey}
+      mode={mode}
+      contained={isDesktop}
+      initial={resuming ? progress ?? undefined : undefined}
+      onClose={handleClose}
+    />
   );
 
   return (
@@ -34,7 +56,7 @@ export default function App() {
         {isDesktop ? (
           <DesktopFrame overlay={survey}>
             {status !== 'declined' && (
-              <RelaunchPanel survey={demoSurvey} status={status} open={open} onLaunch={launch} />
+              <RelaunchPanel survey={demoSurvey} status={status} open={open} onLaunch={onLaunch} />
             )}
             <img
               src="/mock/homepage-content.jpg"
@@ -44,7 +66,7 @@ export default function App() {
           </DesktopFrame>
         ) : (
           <div className="h-full overflow-auto">
-            <MobileDashboard survey={demoSurvey} status={status} open={open} onLaunch={launch} />
+            <MobileDashboard survey={demoSurvey} status={status} open={open} onLaunch={onLaunch} />
             {survey}
           </div>
         )}
@@ -80,6 +102,7 @@ function RelaunchPanel({
   onLaunch: () => void;
 }) {
   const completed = status === 'completed';
+  const started = status === 'started';
   return (
     <section className="flex flex-col gap-4 rounded-xl border border-brand/25 bg-surface p-5 shadow-sm sm:flex-row sm:items-center">
       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
@@ -88,14 +111,20 @@ function RelaunchPanel({
 
       <div className="min-w-0 flex-1">
         <h2 className="text-base font-bold text-ink">
-          {completed ? 'Thanks for completing the survey' : survey.title}
+          {completed
+            ? 'Thanks for completing the survey'
+            : started
+              ? 'You haven’t finished the survey'
+              : survey.title}
         </h2>
         <p className="mt-0.5 text-sm text-muted">
           {completed
             ? 'Your responses have been recorded. You can take it again to preview the flow.'
-            : 'We’d like your views to help shape how students are supported.'}
+            : started
+              ? 'Pick up where you left off — your answers so far have been saved.'
+              : 'We’d like your views to help shape how students are supported.'}
         </p>
-        {!completed && (
+        {!completed && !started && (
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
             {survey.estimatedTime && (
               <span className="inline-flex items-center gap-1">
@@ -114,7 +143,7 @@ function RelaunchPanel({
       </div>
 
       <Button onClick={onLaunch} className="shrink-0" disabled={open}>
-        {completed ? 'Take it again' : 'Take the survey'}
+        {completed ? 'Take it again' : started ? 'Resume survey' : 'Take the survey'}
       </Button>
     </section>
   );
