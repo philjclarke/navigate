@@ -1,5 +1,4 @@
 import type { InvitationHighlight, Survey } from '../survey/types';
-import { ResearchIllustration } from '../components/Illustration';
 import {
   IconClock,
   IconShield,
@@ -67,7 +66,11 @@ export function Invitation({
             </div>
 
             <div className="hidden md:block">
-              <ResearchIllustration className="w-full h-auto" />
+              <img
+                src="/mock/main-image.png"
+                alt="Illustration of a student giving positive feedback"
+                className="mx-auto w-full max-w-xs h-auto"
+              />
             </div>
           </div>
         </div>
